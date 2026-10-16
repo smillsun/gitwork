@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gitwork · 项目主页</title>
+  <meta name="description" content="Gitwork —— 一个使用 GitHub Pages 发布的静态站点项目。" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128640;</text></svg>" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav container">
+      <a class="brand" href="#top">
+        <span class="brand-mark">G</span>
+        <span class="brand-name">Gitwork</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">特性</a></li>
+        <li><a href="#stack">技术栈</a></li>
+        <li><a href="#deploy">部署</a></li>
+        <li><a class="nav-cta" href="#start">快速开始</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="top">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="container hero-inner">
+        <p class="eyebrow">Static Site · GitHub Pages</p>
+        <h1 class="hero-title">
+          用最简单的方式<br />
+          <span class="grad">发布你的静态站点</span>
+        </h1>
+        <p class="hero-sub">
+          Gitwork 是一个轻量的静态站点模板：零构建、零依赖、开箱即用。
+          推送到 <code>main</code> 分支即可自动上线。
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#start">开始使用</a>
+          <a class="btn btn-ghost" href="#features">了解更多</a>
+        </div>
+        <div class="hero-badges">
+          <span class="badge">⚡ 零依赖</span>
+          <span class="badge">📱 响应式</span>
+          <span class="badge">🌙 深色适配</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="section">
+      <div class="container">
+        <h2 class="section-title">核心特性</h2>
+        <p class="section-sub">专注于内容本身，把工程复杂度降到最低。</p>
+        <div class="grid grid-3">
+          <article class="card">
+            <div class="card-icon">⚡</div>
+            <h3>极速加载</h3>
+            <p>纯静态资源，无框架、无构建步骤，首屏渲染几乎瞬时完成。</p>
+          </article>
+          <article class="card">
+            <div class="card-icon">📱</div>
+            <h3>全端响应式</h3>
+            <p>基于 CSS Grid 与弹性布局，手机、平板、桌面均有良好体验。</p>
+          </article>
+          <article class="card">
+            <div class="card-icon">🎨</div>
+            <h3>现代视觉</h3>
+            <p>深色主题、渐变强调色与柔和阴影，呈现专业的项目形象。</p>
+          </article>
+          <article class="card">
+            <div class="card-icon">🚀</div>
+            <h3>一键发布</h3>
+            <p>推送到 main 分支，GitHub Pages 自动构建并对外提供服务。</p>
+          </article>
+          <article class="card">
+            <div class="card-icon">🔧</div>
+            <h3>易于定制</h3>
+            <p>变量集中在 <code>:root</code>，改主题色与间距只需几行 CSS。</p>
+          </article>
+          <article class="card">
+            <div class="card-icon">🔒</div>
+            <h3>默认 HTTPS</h3>
+            <p>GitHub Pages 自动签发并续期证书，无需自行配置服务器。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stack -->
+    <section id="stack" class="section section-alt">
+      <div class="container">
+        <h2 class="section-title">技术栈</h2>
+        <p class="section-sub">没有魔法，只有浏览器原生能力。</p>
+        <div class="grid grid-3">
+          <div class="stat">
+            <div class="stat-num">HTML5</div>
+            <div class="stat-label">语义化结构</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">CSS3</div>
+            <div class="stat-label">Grid / Flex / 自定义属性</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">ES6+</div>
+            <div class="stat-label">原生 JavaScript</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Deploy -->
+    <section id="deploy" class="section">
+      <div class="container narrow">
+        <h2 class="section-title">部署流程</h2>
+        <ol class="steps">
+          <li>
+            <span class="step-no">1</span>
+            <div>
+              <h4>推送到仓库</h4>
+              <p>把改动提交并推送到 GitHub 仓库的 <code>main</code> 分支。</p>
+            </div>
+          </li>
+          <li>
+            <span class="step-no">2</span>
+            <div>
+              <h4>开启 Pages</h4>
+              <p>在仓库 <strong>Settings → Pages</strong> 中，将 Source 设为
+                <code>Deploy from a branch</code>，分支选 <code>main</code>、目录选 <code>/ (root)</code>。</p>
+            </div>
+          </li>
+          <li>
+            <span class="step-no">3</span>
+            <div>
+              <h4>访问站点</h4>
+              <p>稍等 1–2 分钟，站点即在 <code>https://&lt;用户名&gt;.github.io/&lt;仓库名&gt;/</code> 上线。</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Start -->
+    <section id="start" class="section section-cta">
+      <div class="container narrow center">
+        <h2 class="section-title">快速开始</h2>
+        <p class="section-sub">克隆、修改、推送，三步上线。</p>
+        <pre class="code"><code>git clone https://github.com/&lt;用户名&gt;/gitwork.git
+cd gitwork
+# 编辑 index.html / assets/css/style.css
+git add .
+git commit -m "Update site"
+git push origin main</code></pre>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>© <span id="year">2026</span> Gitwork · 基于 GitHub Pages 托管</p>
+      <p class="footer-meta">Built with plain HTML, CSS &amp; JavaScript</p>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
