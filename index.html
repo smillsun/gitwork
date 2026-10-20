@@ -423,11 +423,6 @@ sup.req-star{color:var(--error)}
 /* 升版通知：邮件正文预览 */
 .mail-prev{background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:var(--r-md);padding:10px 12px;font-size:12px;line-height:20px;color:var(--on-variant);white-space:pre-wrap;max-height:220px;overflow:auto}
 textarea.mail-prev{width:100%;min-height:180px;max-height:280px;resize:vertical;font-family:inherit;background:var(--surface)}
-/* 邮件正文末尾「提交地址」入口（通知更新邮件模板） */
-.mail-submit{display:flex;align-items:center;gap:4px;margin-top:8px;padding:8px 12px;background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:var(--r-md);font-size:12px;white-space:nowrap}
-.mail-submit .k{color:var(--on-quaternary)}
-.mail-submit-a{color:var(--primary);cursor:pointer;text-decoration:none;font-weight:700}
-.mail-submit-a:hover{text-decoration:underline}
 /* 邮件弹层：抄送人 / 附件上传（≤50M） */
 .mail-up-btn{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 10px;border:1px dashed var(--outline);border-radius:var(--r-md);color:var(--primary);font-size:12px;cursor:pointer;background:var(--primary-bg);user-select:none}
 .mail-up-btn:hover{border-color:var(--primary)}
@@ -1371,6 +1366,23 @@ function genVdrFiles(){
         row.ver = baseVer;
         row.sub = '2026-10-16 09:27:34';
       }
+      /* 演示留痕：已通知更新的行带升版通知，未交且逾期计划日的行带催交通知
+         注意：此处早于 RV_TODAY 定义，日期一律用字面量 */
+      const TODAY_DEMO = '2026-10-20';
+      const ddlDiffDemo = s => Math.round((new Date(String(s).slice(0,10)+'T00:00:00') - new Date(TODAY_DEMO+'T00:00:00'))/86400000);
+      const ccDemo = 'purchase.cc@supplier-demo.com';
+      const mailToDemo = 'vdr.' + String(d.sup||'supplier').replace(/[^A-Za-z0-9]/g,'').toLowerCase().slice(0,4).padEnd(4,'x') + '@supplier-demo.com';
+      if(row.st[1]==='待升版'){
+        const from = baseVer, to = ver;
+        row.stLog.push({t:'2026-10-'+String(9+k%9).padStart(2,'0'), act:'通知更新', from, to,
+          ups: k%4===0 ? 2 : 0, reason:'内审完成，按内审意见修改后升版',
+          mailTo: mailToDemo, cc: ccDemo, ccCnt: 1});
+      }
+      if(ddlDiffDemo(row.plan) < 0 && row.st[1]==='未提交'){
+        row.stLog.push({t:'2026-10-'+String(12+k%7).padStart(2,'0'), act:'催交',
+          mailTo: mailToDemo, cc: ccDemo, ccCnt: 1,
+          body:`${d.sup}，您好！\n\n贵司承担的 ${d.doc} 合同，${planFile} 文件计划提交日期：${row.plan}（已逾期 ${Math.abs(ddlDiffDemo(row.plan))} 天），请尽快完成提交！\n如已提交请忽略本邮件`});
+      }
       out.push(row);
     }
   });
@@ -1385,15 +1397,30 @@ function nextVer(v){
 }
 const vdrFiles = genVdrFiles();
 
-/* 设计执行 - VDR文件评审（截图3） */
+/* 设计执行 - VDR文件评审（截图3）
+   部分行带演示通知留痕（催交 / 升版），可直接点「通知记录」查看 */
 const vdrReviews = [
-  {proj:'A*******7 E**********分',fno:'2',fname:'VDR文件',file:'VDR文件-VA.pdf',ver:'A',equip:'—',tag:'—',rev:[['苗*天',0],['张*******）',1],['随*俊',0]],sub:'2026-10-16 10:01:26',ddl:'2026-10-20'},
-  {proj:'A*******7 E**********分',fno:'26027',fname:'自洁式空气过滤器VDR-清单',file:'自洁式空气过滤器VDR-清单-VA.pdf',ver:'A',equip:'自洁式空气过滤器',tag:'K1312y.AF1001',rev:[['苗*天',0],['张*******）',5],['随*俊',1]],sub:'2026-10-16 09:08:54',ddl:'2026-10-20'},
-  {proj:'A*******7 E**********分',fno:'26027',fname:'TG250B螺丝式平衡悬装整机图纸',file:'TG250B螺丝式平衡悬装整机图纸-VA.zip',ver:'A',equip:'—',tag:'—',rev:[['苗*天',0],['张*******）',1]],sub:'2026-10-16 09:07:41',ddl:'2026-10-19'},
-  {proj:'D*******4 深*****分',fno:'D*******4-H-LST-003',fname:'土建PKPM模型',file:'土建PKPM模型-VA.zip',ver:'A',equip:'凉水塔',tag:'E5001A/B/C/D',rev:[['余*海',1],['黄*军',4]],sub:'2026-10-14 10:18:43',ddl:'2026-10-18'},
-  {proj:'D*******4 深*****分',fno:'D*******4-H-LST-001',fname:'土建柱层荷截图',file:'土建柱层荷截图-VA.pdf',ver:'A',equip:'凉水塔',tag:'E5001A/B/C/D',rev:[['余*海',1],['黄*军',4]],sub:'2026-10-14 10:18:29',ddl:'2026-10-18'},
-  {proj:'D*******4 深*****分',fno:'P020260916010-000',fname:'VDR文件清单列表',file:'VDR文件清单列表-VA.xls',ver:'A',equip:'凉水塔',tag:'E5001A/B/C/D',rev:[['杨*',1],['郭*',1]],sub:'2026-10-14 09:57:49',ddl:'2026-10-18'},
-  {proj:'A*******7 E**********分',fno:'26027-FG-E*****5-1',fname:'KN7000A.E5501A9B4 装配图',file:'KN7000A.E5501A9B4 装配图-VA.pdf',ver:'A',equip:'凉水塔',tag:'WT5501A/B/C',rev:[['苗*天',1],['张*******）',1]],sub:'2026-10-08 16:42:14',ddl:'2026-10-17',fst:['gold','待升版']}
+  {proj:'A*******7 E**********分',fno:'2',fname:'VDR文件',file:'VDR文件-VA.pdf',ver:'A',equip:'—',tag:'—',rev:[['苗*天',0],['张*******）',1],['随*俊',0]],sub:'2026-10-16 10:01:26',ddl:'2026-10-20',
+   stLog:[{t:'2026-10-12', act:'催交', mailTo:'vdr.2602@supplier-demo.com', cc:'purchase.cc@supplier-demo.com', ccCnt:1,
+     body:'A*******7 E**********分，您好！\n\n贵司承担的 26027 合同，VDR文件 文件计划提交日期：2026-10-20，请尽快完成提交！\n如已提交请忽略本邮件'}]},
+  {proj:'A*******7 E**********分',fno:'26027',fname:'自洁式空气过滤器VDR-清单',file:'自洁式空气过滤器VDR-清单-VA.pdf',ver:'A',equip:'自洁式空气过滤器',tag:'K1312y.AF1001',rev:[['苗*天',0],['张*******）',5],['随*俊',1]],sub:'2026-10-16 09:08:54',ddl:'2026-10-20',
+   stLog:[{t:'2026-10-09', act:'通知更新', from:'A', to:'B', ups:1, reason:'内审完成，按内审意见修改后升版',
+     mailTo:'vdr.2602@supplier-demo.com', cc:'purchase.cc@supplier-demo.com, tech.lead@supplier-demo.com', ccCnt:2},
+    {t:'2026-10-16', act:'催交', mailTo:'vdr.2602@supplier-demo.com', cc:'purchase.cc@supplier-demo.com', ccCnt:1,
+     body:'A*******7 E**********分，您好！\n\n贵司承担的 26027 合同，自洁式空气过滤器VDR-清单 文件计划提交日期：2026-10-20，请尽快完成提交！\n如已提交请忽略本邮件'}]},
+  {proj:'A*******7 E**********分',fno:'26027',fname:'TG250B螺丝式平衡悬装整机图纸',file:'TG250B螺丝式平衡悬装整机图纸-VA.zip',ver:'A',equip:'—',tag:'—',rev:[['苗*天',0],['张*******）',1]],sub:'2026-10-16 09:07:41',ddl:'2026-10-19',
+   stLog:[{t:'2026-10-15', act:'催交', mailTo:'vdr.2602@supplier-demo.com', cc:'purchase.cc@supplier-demo.com', ccCnt:1,
+     body:'A*******7 E**********分，您好！\n\n贵司承担的 26027 合同，TG250B螺丝式平衡悬装整机图纸 文件计划提交日期：2026-10-19（已逾期 1 天），请尽快完成提交！\n如已提交请忽略本邮件'}]},
+  {proj:'D*******4 深*****分',fno:'D*******4-H-LST-003',fname:'土建PKPM模型',file:'土建PKPM模型-VA.zip',ver:'A',equip:'凉水塔',tag:'E5001A/B/C/D',rev:[['余*海',1],['黄*军',4]],sub:'2026-10-14 10:18:43',ddl:'2026-10-18',
+   stLog:[{t:'2026-10-13', act:'催交', mailTo:'vdr.dxxx@supplier-demo.com', cc:'purchase.cc@supplier-demo.com', ccCnt:1,
+     body:'D*******4 深*****分，您好！\n\n贵司承担的 D*******4 合同，土建PKPM模型 文件计划提交日期：2026-10-18（已逾期 2 天），请尽快完成提交！\n如已提交请忽略本邮件'}]},
+  {proj:'D*******4 深*****分',fno:'D*******4-H-LST-001',fname:'土建柱层荷截图',file:'土建柱层荷截图-VA.pdf',ver:'A',equip:'凉水塔',tag:'E5001A/B/C/D',rev:[['余*海',1],['黄*军',4]],sub:'2026-10-14 10:18:29',ddl:'2026-10-18',stLog:[]},
+  {proj:'D*******4 深*****分',fno:'P020260916010-000',fname:'VDR文件清单列表',file:'VDR文件清单列表-VA.xls',ver:'A',equip:'凉水塔',tag:'E5001A/B/C/D',rev:[['杨*',1],['郭*',1]],sub:'2026-10-14 09:57:49',ddl:'2026-10-18',stLog:[]},
+  {proj:'A*******7 E**********分',fno:'26027-FG-E*****5-1',fname:'KN7000A.E5501A9B4 装配图',file:'KN7000A.E5501A9B4 装配图-VA.pdf',ver:'A',equip:'凉水塔',tag:'WT5501A/B/C',rev:[['苗*天',1],['张*******）',1]],sub:'2026-10-08 16:42:14',ddl:'2026-10-17',fst:['gold','待升版'],
+   stLog:[{t:'2026-10-10', act:'通知更新', from:'A', to:'B', ups:1, reason:'内审完成，按内审意见修改后升版',
+     mailTo:'vdr.kn70@supplier-demo.com', cc:'purchase.cc@supplier-demo.com', ccCnt:1},
+    {t:'2026-10-16', act:'催交', mailTo:'vdr.kn70@supplier-demo.com', cc:'purchase.cc@supplier-demo.com', ccCnt:1,
+     body:'A*******7 E**********分，您好！\n\n贵司承担的 26027-FG-E 合同，KN7000A.E5501A9B4 装配图 文件计划提交日期：2026-10-17（已逾期 3 天），请尽快完成提交！\n如已提交请忽略本邮件'}]}
 ];
 
 /* VDR 文件管理页（双页签 + 双统计区） */
@@ -1987,7 +2014,6 @@ function vdrMailUpHtml(){
       </div>
       <div class="mail-up-list" id="vdrMailUpList"></div></div>`;
 }
-/* 邮件预览用的「提交地址」样式见 :root 之后的 .mail-submit */
 function vdrMailFiles(input){
   [...(input.files||[])].forEach(f=>vdrMailAddFile({name:f.name, size:f.size}));
   input.value = '';
@@ -2018,7 +2044,7 @@ function vdrMailMeta(){
    vdrMailDocNo(c)        合同编号：清单页取单据号 doc；评审页取文件编号中的合同段
    vdrMailFname(c)        需更新的文件名
    vdrUpdateMailBody(c)   正文：供应商名称，您好！…请在 5 个工作日内完成新版本文件提交
-   vdrMailSubmitHtml()    正文末「提交地址：立即提交文件」入口 */
+   vdrUpdateMailSubject(c) 主题：【VDR文件更新通知】合同编号 - 文件名需更新 */
 function vdrMailDocNo(c){
   if(c.doc) return c.doc;
   const s = String(c.fno||'');
@@ -2037,15 +2063,6 @@ function vdrUpdateMailBody(c){
 }
 function vdrUpdateMailSubject(c){
   return `【VDR文件更新通知】${vdrMailDocNo(c)} - ${vdrMailFname(c)}需更新`;
-}
-function vdrMailSubmitHtml(){
-  return `
-    <div class="mail-submit"><span class="k">提交地址：</span>
-      <a class="mail-submit-a" onclick="vdrMailSubmitLink(event)" title="演示环境：模拟跳转供应商文件提交通道">立即提交文件 →</a></div>`;
-}
-function vdrMailSubmitLink(e){
-  if(e) e.preventDefault();
-  toast('已打开文件提交通道', '演示环境：正式环境中此处跳转供应商门户的文件上传页（VDR 提交入口）');
 }
 /* 催交：真实发送动作（写入通知记录 + 提示）
    kind='review' 时作用于评审行（vdrReviews），默认作用于清单行（vdrFiles） */
@@ -2213,7 +2230,6 @@ function openVdrNotifyModal(uid){
       <div class="m-fi wide"><label>更新原因<i class="req">*</i></label>
         <input class="input" id="vdrReasonInput" value="内审完成，按内审意见修改后升版" placeholder="请输入更新原因，如：内审完成，按意见修改后升版"></div>
       ${vdrMailUpHtml()}
-      ${vdrMailSubmitHtml()}
     </div>
     <div class="m-foot"><button class="btn btn-default" onclick="closeVdrNotify()">取消</button>
       <button class="btn btn-primary" onclick="sendVdrNotify()">发送通知</button></div>
@@ -2525,7 +2541,6 @@ function openVdrRevNotify(idx){
       <div class="m-fi wide"><label>更新原因<i class="req">*</i></label>
         <input class="input" id="vdrRevReasonInput" value="内审完成，按内审意见修改后升版" placeholder="请输入更新原因，如：内审完成，按意见修改后升版"></div>
       ${vdrMailUpHtml()}
-      ${vdrMailSubmitHtml()}
     </div>
     <div class="m-foot"><button class="btn btn-default" onclick="closeVdrRevNotify()">取消</button>
       <button class="btn btn-primary" onclick="sendVdrRevNotify()">发送通知</button></div>
