@@ -433,6 +433,12 @@ textarea.mail-prev{width:100%;min-height:180px;max-height:280px;resize:vertical;
 .mail-up-i .s{color:var(--on-quaternary);flex:none;font-family:var(--mono);font-size:11px}
 .mail-up-i .x{color:var(--on-quaternary);cursor:pointer;flex:none;padding:0 2px}
 .mail-up-i .x:hover{color:var(--error)}
+/* 通知记录：催交 / 升版留痕列表 */
+.nlog{display:flex;flex-direction:column;gap:8px;max-height:360px;overflow:auto}
+.nlog-i{border:1px solid var(--outline-variant);border-radius:var(--r-md);padding:8px 10px;background:var(--surface-container)}
+.nlog-h{display:flex;align-items:center;gap:8px;font-size:12px}
+.nlog-h .t{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--on-quaternary)}
+.nlog-b{font-size:12px;line-height:18px;color:var(--on-variant);margin-top:4px;white-space:normal;word-break:break-all}
 
 /* ============ 文件详情右侧抽屉 ============ */
 .drawer-wrap{position:fixed;inset:0;z-index:160;display:none}
@@ -1471,14 +1477,14 @@ function vdrmPageHtml(){
         </div>
       </div>
       <div class="pbar" id="vdrmFileDrillBar"></div>
-      <div class="tbl-wrap"><table class="tbl-fixed" style="min-width:1640px">
+      <div class="tbl-wrap"><table class="tbl-fixed" style="min-width:1700px">
         <thead><tr>
           <th class="sticky-l" style="width:44px">序号</th><th class="sticky-l2" style="width:126px;left:44px">单据编号</th><th style="width:140px">项目名称</th><th style="width:104px">厂商</th>
           <th style="width:104px">设备</th><th style="width:84px">设备位号</th>
           <th style="width:160px">文件名</th><th style="width:56px">最新版本</th><th style="width:152px">提交文件</th>
           <th style="width:170px">VDR文件编号</th>
           <th style="width:150px">实际提交日期</th><th style="width:152px">计划提交日期</th><th style="width:88px">评审人</th>
-          <th class="sticky-r" style="width:116px">操作</th>
+          <th class="sticky-r" style="width:176px">操作</th>
         </tr></thead>
         <tbody id="vdrmBody2"></tbody>
       </table></div>
@@ -1930,7 +1936,7 @@ function renderVdrmFiles(){
         r.st[1]==='已提交'
           ? `<button class="btn-link" style="font-size:12px;color:var(--on-quaternary);cursor:not-allowed" disabled title="供应商已提交，无需催交">催交</button>`
           : `<button class="btn-link" style="font-size:12px" onclick="openVdrUrgeModal('${r.uid}')">催交</button>`
-      }<button class="btn-link" style="font-size:12px;margin-left:10px" onclick="openVdrNotifyModal('${r.uid}')" title="发送邮件通知供应商更新文件">通知更新</button></td>
+      }<button class="btn-link" style="font-size:12px;margin-left:10px" onclick="openVdrNotifyModal('${r.uid}')" title="发送邮件通知供应商更新文件">通知更新</button><button class="btn-link" style="font-size:12px;margin-left:10px" onclick="openVdrNoticeLog('${r.uid}')" title="查看催交 / 通知升版记录">通知记录</button></td>
     </tr>`).join('') || '<tr class="empty-tr"><td colspan="14" style="text-align:center;color:var(--on-quaternary);padding:48px 0">暂无满足条件的数据</td></tr>';
   const tot = document.getElementById('vdrmTotal2');
   if(tot) tot.innerHTML = `共 <b>${L.length}</b> 条`;
@@ -1997,10 +2003,12 @@ function vdrMailMeta(){
   return { cc, ccCnt: cc ? cc.split(/[,，;；]/).filter(x=>x.trim()).length : 0, ups };
 }
 /* 催交：真实发送动作（写入审查记录 + 提示） */
-function urgeSupplier(uid){
+function urgeSupplier(uid, meta){
   const r = vdrFiles.find(x=>x.uid === uid);
   if(!r) return;
-  r.stLog.push({t:RV_TODAY, act:'催交'});
+  const rec = {t:RV_TODAY, act:'催交'};
+  if(meta){ rec.mailTo = meta.to || ''; rec.body = meta.body || ''; }
+  r.stLog.push(rec);
   toast('催交通知已发送', `${r.sup} · ${r.equip} · 文件名 ${r.planFile}（邮件 + 站内信）`);
 }
 /* 催交弹层：显示催交内容，确认后发送；收件人默认带出、可修改 */
@@ -2051,9 +2059,50 @@ function closeVdrUrge(){
 }
 function sendVdrUrge(){
   const uid = window.__vdrUrgeUid;
+  const to = ((document.getElementById('vdrUrgeToInput')||{}).value||'').trim();
+  const body = ((document.getElementById('vdrUrgeBodyTa')||{}).value||'').trim();
   closeVdrUrge();
-  if(uid) urgeSupplier(uid);
+  if(uid) urgeSupplier(uid, { to, body });
 }
+/* 通知记录：查看该文件历次催交 / 通知升版记录 */
+function openVdrNoticeLog(uid){
+  const r = vdrFiles.find(x=>x.uid === uid);
+  if(!r) return;
+  const old = document.getElementById('vdrLogMask'); if(old) old.remove();
+  const items = (r.stLog||[]).filter(x=>x.act==='催交' || x.act==='通知更新').slice().reverse();
+  const box = document.createElement('div');
+  box.className = 'mask open'; box.id = 'vdrLogMask';
+  box.innerHTML = `
+  <div class="modal" role="dialog" aria-modal="true" style="width:620px">
+    <div class="m-head"><b>通知记录</b>
+      <span class="hint" style="margin-left:10px">${r.doc} · ${r.equip} · ${r.planFile}</span>
+      <span class="m-close" onclick="closeVdrNoticeLog()" title="关闭（Esc）">✕</span></div>
+    <div class="m-body" style="display:block">
+      ${items.length ? `<div class="nlog">${items.map(x=>{
+        const isUrge = x.act === '催交';
+        const head = isUrge ? '催交' : '通知升版';
+        const cls  = isUrge ? 'tag-gold' : 'tag-blue';
+        const lines = [];
+        if(x.mailTo) lines.push(`收件人：${x.mailTo}`);
+        if(!isUrge && x.from) lines.push(`版本：${x.from} → ${x.to}`);
+        if(!isUrge && x.cc) lines.push(`抄送：${x.cc}`);
+        if(!isUrge && x.ups) lines.push(`附件：${x.ups} 个`);
+        if(!isUrge && x.reason) lines.push(`更新原因：${x.reason}`);
+        if(isUrge && x.body) lines.push(x.body.replace(/\n+/g,'　').slice(0,120) + (x.body.length>120?'…':''));
+        return `<div class="nlog-i">
+          <div class="nlog-h"><span class="tag ${cls}"><span class="tag-dot" style="background:${isUrge?'#faad14':'#1677ff'}"></span>${head}</span>
+            <span class="t">${x.t}</span></div>
+          <div class="nlog-b">${lines.length ? lines.join('<br>') : '—'}</div>
+        </div>`;
+      }).join('')}</div>`
+      : `<div class="empty-mini"><div class="ico">🗂</div>暂无通知记录<div style="font-size:11px;margin-top:4px">催交、通知更新发送后会在此留痕</div></div>`}
+    </div>
+    <div class="m-foot"><button class="btn btn-primary" onclick="closeVdrNoticeLog()">关 闭</button></div>
+  </div>`;
+  document.body.appendChild(box);
+  box.addEventListener('click', e=>{ if(e.target === box) closeVdrNoticeLog(); });
+}
+function closeVdrNoticeLog(){ const m = document.getElementById('vdrLogMask'); if(m) m.remove(); }
 /* 邮件通知弹层：确认后版本推进 +1，状态置为「待升版」 */
 window.__vdrNotifyUid = null;
 function openVdrNotifyModal(uid){
@@ -2096,12 +2145,14 @@ function sendVdrNotify(){
   const r = vdrFiles.find(x=>x.uid === uid);
   const { ccCnt, ups } = vdrMailMeta();
   const reason = ((document.getElementById('vdrReasonInput')||{}).value||'').trim() || '内审完成，按内审意见修改后升版';
+  const toMail = ((document.getElementById('vdrToInput')||{}).value||'').trim();
+  const { cc } = vdrMailMeta();
   if(!r){ closeVdrNotify(); return; }
   const from = r.ver, to = nextVer(from);
   r.ver = to;
   r.st  = ['gold','待升版'];
   r.notifyAt = RV_TODAY;
-  r.stLog.push({t:RV_TODAY, act:'通知更新', from, to, ups:ups.length, reason});
+  r.stLog.push({t:RV_TODAY, act:'通知更新', from, to, ups:ups.length, reason, mailTo:toMail, cc, ccCnt});
   closeVdrNotify();
   refreshVdrmFiles();          /* 表格 + 指标 + 筛选条三层同步 */
   toast('升版通知已发送', `${r.sup} · ${r.equip} · 版本 ${from} → ${to}，提交状态已置为「待升版」`
