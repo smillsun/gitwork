@@ -423,6 +423,11 @@ sup.req-star{color:var(--error)}
 /* 升版通知：邮件正文预览 */
 .mail-prev{background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:var(--r-md);padding:10px 12px;font-size:12px;line-height:20px;color:var(--on-variant);white-space:pre-wrap;max-height:220px;overflow:auto}
 textarea.mail-prev{width:100%;min-height:180px;max-height:280px;resize:vertical;font-family:inherit;background:var(--surface)}
+/* 邮件正文末尾「提交地址」入口（通知更新邮件模板） */
+.mail-submit{display:flex;align-items:center;gap:4px;margin-top:8px;padding:8px 12px;background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:var(--r-md);font-size:12px;white-space:nowrap}
+.mail-submit .k{color:var(--on-quaternary)}
+.mail-submit-a{color:var(--primary);cursor:pointer;text-decoration:none;font-weight:700}
+.mail-submit-a:hover{text-decoration:underline}
 /* 邮件弹层：抄送人 / 附件上传（≤50M） */
 .mail-up-btn{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 10px;border:1px dashed var(--outline);border-radius:var(--r-md);color:var(--primary);font-size:12px;cursor:pointer;background:var(--primary-bg);user-select:none}
 .mail-up-btn:hover{border-color:var(--primary)}
@@ -1982,6 +1987,7 @@ function vdrMailUpHtml(){
       </div>
       <div class="mail-up-list" id="vdrMailUpList"></div></div>`;
 }
+/* 邮件预览用的「提交地址」样式见 :root 之后的 .mail-submit */
 function vdrMailFiles(input){
   [...(input.files||[])].forEach(f=>vdrMailAddFile({name:f.name, size:f.size}));
   input.value = '';
@@ -2028,6 +2034,9 @@ function vdrUpdateMailBody(c){
   return `${sup}，您好！
 
 贵司承担的 ${vdrMailDocNo(c)} 合同，${vdrMailFname(c)} 文件需要更新，请在5个工作日内完成新版本文件提交，谢谢！`;
+}
+function vdrUpdateMailSubject(c){
+  return `【VDR文件更新通知】${vdrMailDocNo(c)} - ${vdrMailFname(c)}需更新`;
 }
 function vdrMailSubmitHtml(){
   return `
@@ -2188,6 +2197,7 @@ function openVdrNotifyModal(uid){
   window.__vdrNotifyUid = uid;
   const to = nextVer(r.ver);
   const mailTo = vdrSupplierMail(r.sup);
+  const mailRow = Object.assign({}, r, {supName: r.sup});
   const box = document.createElement('div');
   box.className = 'mask open'; box.id = 'vdrNotifyMask';
   box.innerHTML = `
@@ -2199,10 +2209,11 @@ function openVdrNotifyModal(uid){
         <span class="hint">${r.sup} · 默认带出供应商邮箱，可编辑 · 演示环境不实际外发</span></div>
       ${vdrMailCcHtml()}
       <div class="m-fi wide"><label>邮件主题</label>
-        <input class="input" readonly value="【VDR文件升版通知】${r.doc} ${r.equip} 需更新至 ${to} 版"></div>
+        <input class="input" readonly value="${vdrUpdateMailSubject(mailRow)}"></div>
       <div class="m-fi wide"><label>更新原因<i class="req">*</i></label>
         <input class="input" id="vdrReasonInput" value="内审完成，按内审意见修改后升版" placeholder="请输入更新原因，如：内审完成，按意见修改后升版"></div>
       ${vdrMailUpHtml()}
+      ${vdrMailSubmitHtml()}
     </div>
     <div class="m-foot"><button class="btn btn-default" onclick="closeVdrNotify()">取消</button>
       <button class="btn btn-primary" onclick="sendVdrNotify()">发送通知</button></div>
@@ -2490,33 +2501,44 @@ function vdRevBaseBody(r){
     ${cell('提交时间', r.sub)}${cell('通知供应商时间', r.notifyAt||'')}
   </div>`;
 }
-/* 评审行：通知更新（邮件） */
+/* 评审行：通知更新（邮件）—— 与「VDR文件清单」通知弹层结构 / 模板完全一致 */
 function openVdrRevNotify(idx){
   const r = vdrReviews[idx];
   if(!r) return;
   const to = nextVer(r.ver);
   window.__revNotifyIdx = idx;
   const old = document.getElementById('vdrRevNotifyMask'); if(old) old.remove();
+  const mailTo = vdrSupplierMail(r.fno);
+  const docNo  = vdrMailDocNo(r);
   const box = document.createElement('div');
   box.className = 'mask open'; box.id = 'vdrRevNotifyMask';
   box.innerHTML = `
-  <div class="modal" style="width:620px">
-    <div class="m-head"><b>邮件通知供应商更新</b><span class="m-close" onclick="closeVdrRevNotify()">✕</span></div>
+  <div class="modal" role="dialog" aria-modal="true" style="width:600px">
+    <div class="m-head"><b>邮件通知供应商更新</b><span class="m-close" onclick="closeVdrRevNotify()" title="关闭（Esc）">✕</span></div>
     <div class="m-body">
-      <div class="m-fi"><label>收件人</label><input class="input" id="vdrRevToInput" value="vdr.${String(idx+1).padStart(3,'0')}@supplier-demo.com"></div>
+      <div class="m-fi wide"><label>收件人</label>
+        <input class="input" id="vdrRevToInput" value="${mailTo}">
+        <span class="hint">${docNo} · 默认带出供应商邮箱，可编辑 · 演示环境不实际外发</span></div>
       ${vdrMailCcHtml()}
-      <div class="m-fi"><label>版本</label><input class="input" value="${r.ver} → ${to}" readonly></div>
-      <div class="m-fi wide"><label>主题</label><input class="input" value="【升版通知】${r.fno} ${r.fname}（${r.ver} → ${to}）" readonly></div>
+      <div class="m-fi wide"><label>邮件主题</label>
+        <input class="input" readonly id="vdrRevSubjectInput" value="${vdrUpdateMailSubject(r)}"></div>
       <div class="m-fi wide"><label>更新原因<i class="req">*</i></label>
         <input class="input" id="vdrRevReasonInput" value="内审完成，按内审意见修改后升版" placeholder="请输入更新原因，如：内审完成，按意见修改后升版"></div>
       ${vdrMailUpHtml()}
+      ${vdrMailSubmitHtml()}
     </div>
     <div class="m-foot"><button class="btn btn-default" onclick="closeVdrRevNotify()">取消</button>
       <button class="btn btn-primary" onclick="sendVdrRevNotify()">发送通知</button></div>
   </div>`;
   document.body.appendChild(box);
+  document.addEventListener('keydown', escVdrRevNotify);
 }
-function closeVdrRevNotify(){ const m = document.getElementById('vdrRevNotifyMask'); if(m) m.remove(); window.__revNotifyIdx = null; }
+function escVdrRevNotify(e){ if(e.key === 'Escape' && document.getElementById('vdrRevNotifyMask')) closeVdrRevNotify(); }
+function closeVdrRevNotify(){
+  const m = document.getElementById('vdrRevNotifyMask'); if(m) m.remove();
+  document.removeEventListener('keydown', escVdrRevNotify);
+  window.__revNotifyIdx = null;
+}
 function sendVdrRevNotify(){
   const i = window.__revNotifyIdx;
   const r = vdrReviews[i];
