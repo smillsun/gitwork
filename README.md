@@ -1,72 +1,23 @@
-# Gitwork
+# 采购执行平台 · 演示系统
 
-一个轻量的**静态站点模板**，零构建、零依赖，推送到 `main` 分支即可通过 **GitHub Pages** 上线。
+单文件前端演示系统（`index.html`，零依赖，HTML + CSS + JS 全内联），可直接由 GitHub Pages 托管。
+
+## 在线预览
+
+👉 https://smillsun.github.io/gitwork/
+
+## 内容
+
+| 文件 | 说明 |
+|---|---|
+| `index.html` | 采购执行平台演示系统（技术征询 / 采购方案评审 / VDR 文件管理 / VDR 文件评审 / 项目管理 / 在线评审任务 等） |
+| `design.md` | 设计规范（Design System）：设计令牌、字体排版、页面骨架、组件规范、交互约定，可直接复用到其他系统 |
 
 ## 特性
 
-- ⚡ 纯静态资源，无框架、无构建步骤
-- 📱 CSS Grid / Flex 响应式布局，适配手机、平板、桌面
-- 🌙 现代深色视觉，主题变量集中在 `:root`
-- 🚀 推送到 `main` 即自动发布
-- 🔒 由 GitHub Pages 提供默认 HTTPS
+- Ant Design 视觉语言，紧凑高密度布局（12px 基准 / 28px 控件 / 32px 行高）
+- 列表页统一结构：查询卡 → 统计指标卡（支持点击下钻）→ 表格卡（固定列 + 筛选条 + 分页）
+- 状态色 + 形状双通道编码，色弱可辨
+- 全量演示数据已脱敏：公司/供应商/项目编号/项目名称前后各留 1 个可读字符，中间以 `*` 替代；人名仅保留姓氏
 
-## 目录结构
-
-```
-.
-├── index.html              # 站点首页
-├── assets/
-│   ├── css/style.css       # 全部样式
-│   └── js/main.js          # 页脚年份 + 滚动渐显
-├── .nojekyll               # 关闭 Jekyll 处理（保留以 _ 开头的文件）
-├── .gitignore
-├── LICENSE
-└── README.md
-```
-
-## 本地预览
-
-无需任何依赖，任选一种方式：
-
-```bash
-# 方式一：直接用浏览器打开
-start index.html          # Windows
-
-# 方式二：起一个本地静态服务器（任选其一）
-python -m http.server 8080
-npx serve .
-```
-
-然后访问 <http://localhost:8080>。
-
-## 部署到 GitHub Pages
-
-1. 将本目录提交并推送到 GitHub 仓库的 `main` 分支：
-
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git branch -M main
-   git remote add origin https://github.com/<用户名>/<仓库名>.git
-   git push -u origin main
-   ```
-
-2. 打开仓库 **Settings → Pages**。
-3. 在 **Build and deployment** 中，将 **Source** 设为 `Deploy from a branch`，
-   **Branch** 选择 `main`，目录选择 `/ (root)`，然后保存。
-4. 等待 1–2 分钟，站点即可访问：
-   - 项目站点：`https://<用户名>.github.io/<仓库名>/`
-   - 用户站点（仓库名为 `<用户名>.github.io`）：`https://<用户名>.github.io/`
-
-## 定制
-
-| 想改什么 | 改哪里 |
-| --- | --- |
-| 主题色、圆角、字体 | `assets/css/style.css` 顶部 `:root` 变量 |
-| 文案与结构 | `index.html` |
-| 交互行为 | `assets/js/main.js` |
-
-## License
-
-[MIT](./LICENSE)
+> 演示数据均为虚构或已脱敏，不代表任何真实项目信息。
