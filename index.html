@@ -445,6 +445,13 @@ textarea.mail-prev{width:100%;min-height:180px;max-height:280px;resize:vertical;
 .tl-h{margin-bottom:2px}
 .tl-f{font-size:12px;line-height:18px;color:var(--on-variant);margin-top:2px;white-space:normal;word-break:break-all}
 .tl-f .k{color:var(--on-quaternary)}
+/* 通知记录附件列表：文件名 + 预览 / 下载 */
+.tl-ups{display:flex;flex-direction:column;gap:4px;margin-top:2px}
+.tl-up{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:4px 8px;background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:var(--r-md);font-size:12px;color:var(--on-surface)}
+.tl-up svg{color:var(--on-quaternary);flex:none}
+.tl-up .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--mono);font-size:11px}
+.tl-up .a{color:var(--primary);cursor:pointer;flex:none;font-size:11px;white-space:nowrap}
+.tl-up .a:hover{text-decoration:underline}
 
 /* ============ 文件详情右侧抽屉 ============ */
 .drawer-wrap{position:fixed;inset:0;z-index:160;display:none}
@@ -1374,8 +1381,9 @@ function genVdrFiles(){
       const mailToDemo = 'vdr.' + String(d.sup||'supplier').replace(/[^A-Za-z0-9]/g,'').toLowerCase().slice(0,4).padEnd(4,'x') + '@supplier-demo.com';
       if(row.st[1]==='待升版'){
         const from = baseVer, to = ver;
+        const upsList = k%4===0 ? ['内审意见回复单.pdf','新版检查清单.xlsx'] : ['内审意见回复单.pdf'];
         row.stLog.push({t:'2026-10-'+String(9+k%9).padStart(2,'0'), act:'通知更新', from, to,
-          ups: k%4===0 ? 2 : 0, reason:'内审完成，按内审意见修改后升版',
+          ups: upsList.length, upsList, reason:'内审完成，按内审意见修改后升版',
           mailTo: mailToDemo, cc: ccDemo, ccCnt: 1});
       }
       if(ddlDiffDemo(row.plan) < 0 && row.st[1]==='未提交'){
@@ -1404,7 +1412,7 @@ const vdrReviews = [
    stLog:[{t:'2026-10-12', act:'催交', mailTo:'vdr.2602@supplier-demo.com', cc:'purchase.cc@supplier-demo.com', ccCnt:1,
      body:'A*******7 E**********分，您好！\n\n贵司承担的 26027 合同，VDR文件 文件计划提交日期：2026-10-20，请尽快完成提交！\n如已提交请忽略本邮件'}]},
   {proj:'A*******7 E**********分',fno:'26027',fname:'自洁式空气过滤器VDR-清单',file:'自洁式空气过滤器VDR-清单-VA.pdf',ver:'A',equip:'自洁式空气过滤器',tag:'K1312y.AF1001',rev:[['苗*天',0],['张*******）',5],['随*俊',1]],sub:'2026-10-16 09:08:54',ddl:'2026-10-20',
-   stLog:[{t:'2026-10-09', act:'通知更新', from:'A', to:'B', ups:1, reason:'内审完成，按内审意见修改后升版',
+   stLog:[{t:'2026-10-09', act:'通知更新', from:'A', to:'B', ups:1, upsList:['内审意见回复单.pdf'], reason:'内审完成，按内审意见修改后升版',
      mailTo:'vdr.2602@supplier-demo.com', cc:'purchase.cc@supplier-demo.com, tech.lead@supplier-demo.com', ccCnt:2},
     {t:'2026-10-16', act:'催交', mailTo:'vdr.2602@supplier-demo.com', cc:'purchase.cc@supplier-demo.com', ccCnt:1,
      body:'A*******7 E**********分，您好！\n\n贵司承担的 26027 合同，自洁式空气过滤器VDR-清单 文件计划提交日期：2026-10-20，请尽快完成提交！\n如已提交请忽略本邮件'}]},
@@ -1417,7 +1425,7 @@ const vdrReviews = [
   {proj:'D*******4 深*****分',fno:'D*******4-H-LST-001',fname:'土建柱层荷截图',file:'土建柱层荷截图-VA.pdf',ver:'A',equip:'凉水塔',tag:'E5001A/B/C/D',rev:[['余*海',1],['黄*军',4]],sub:'2026-10-14 10:18:29',ddl:'2026-10-18',stLog:[]},
   {proj:'D*******4 深*****分',fno:'P020260916010-000',fname:'VDR文件清单列表',file:'VDR文件清单列表-VA.xls',ver:'A',equip:'凉水塔',tag:'E5001A/B/C/D',rev:[['杨*',1],['郭*',1]],sub:'2026-10-14 09:57:49',ddl:'2026-10-18',stLog:[]},
   {proj:'A*******7 E**********分',fno:'26027-FG-E*****5-1',fname:'KN7000A.E5501A9B4 装配图',file:'KN7000A.E5501A9B4 装配图-VA.pdf',ver:'A',equip:'凉水塔',tag:'WT5501A/B/C',rev:[['苗*天',1],['张*******）',1]],sub:'2026-10-08 16:42:14',ddl:'2026-10-17',fst:['gold','待升版'],
-   stLog:[{t:'2026-10-10', act:'通知更新', from:'A', to:'B', ups:1, reason:'内审完成，按内审意见修改后升版',
+   stLog:[{t:'2026-10-10', act:'通知更新', from:'A', to:'B', ups:1, upsList:['内审意见回复单-装配图.pdf'], reason:'内审完成，按内审意见修改后升版',
      mailTo:'vdr.kn70@supplier-demo.com', cc:'purchase.cc@supplier-demo.com', ccCnt:1},
     {t:'2026-10-16', act:'催交', mailTo:'vdr.kn70@supplier-demo.com', cc:'purchase.cc@supplier-demo.com', ccCnt:1,
      body:'A*******7 E**********分，您好！\n\n贵司承担的 26027-FG-E 合同，KN7000A.E5501A9B4 装配图 文件计划提交日期：2026-10-17（已逾期 3 天），请尽快完成提交！\n如已提交请忽略本邮件'}]}
@@ -2185,7 +2193,13 @@ function openVdrNoticeLog(uid, kind){
             ${f('收件人：', x.mailTo)}
             ${f('抄送：', x.cc)}
             ${!isUrge ? f('版本：', x.from ? `${x.from} → ${x.to}` : '') : ''}
-            ${!isUrge ? f('附件：', x.ups ? x.ups + ' 个' : '') : ''}
+            ${!isUrge && x.upsList && x.upsList.length ? `<div class="tl-f"><span class="k">附件：</span><span class="tl-ups">${x.upsList.map(n=>
+              `<span class="tl-up" data-name="${n}" title="点击：预览 / 下载">
+                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M9.5 2.5H4.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V5.5L9.5 2.5Z" stroke="currentColor" stroke-width="1.4"/><path d="M9.3 2.7V5.8h3.1" stroke="currentColor" stroke-width="1.4"/></svg>
+                 <span class="n">${n}</span>
+                 <span class="a" onclick="vdrLogPreviewAtt('${n.replace(/'/g,"\\'")}',event)">预览</span><span style="color:var(--outline)">|</span><span class="a" onclick="vdrLogDownloadAtt('${n.replace(/'/g,"\\'")}',event)">下载</span>
+               </span>`).join('')}</span></div>`
+             : (!isUrge && x.ups ? f('附件：', x.ups + ' 个') : '')}
             ${!isUrge ? f('更新原因：', x.reason) : ''}
             ${isUrge && x.body ? `<div class="tl-f"><span class="k">内容：</span><span style="white-space:pre-wrap">${x.body}</span></div>` : ''}
           </div>
@@ -2204,6 +2218,15 @@ function closeVdrNoticeLog(){
 }
 function escVdrNoticeLog(e){
   if(e.key === 'Escape' && document.getElementById('vdrLogDrawer')) closeVdrNoticeLog();
+}
+/* 通知记录附件：预览 / 下载（与提交文件交互一致） */
+function vdrLogPreviewAtt(name, e){
+  if(e){ e.stopPropagation(); }
+  toast('正在打开预览', `${name}（演示环境：显示模拟预览）`);
+}
+function vdrLogDownloadAtt(name, e){
+  if(e){ e.stopPropagation(); }
+  toast('已开始下载', `${name}（演示环境，不产生真实文件）`);
 }
 /* 邮件通知弹层：确认后版本推进 +1，状态置为「待升版」 */
 window.__vdrNotifyUid = null;
@@ -2255,7 +2278,7 @@ function sendVdrNotify(){
   r.ver = to;
   r.st  = ['gold','待升版'];
   r.notifyAt = RV_TODAY;
-  r.stLog.push({t:RV_TODAY, act:'通知更新', from, to, ups:ups.length, reason, mailTo:toMail, cc, ccCnt});
+  r.stLog.push({t:RV_TODAY, act:'通知更新', from, to, ups:ups.length, upsList:ups.slice(), reason, mailTo:toMail, cc, ccCnt});
   closeVdrNotify();
   refreshVdrmFiles();          /* 表格 + 指标 + 筛选条三层同步 */
   toast('升版通知已发送', `${r.sup} · ${r.equip} · 版本 ${from} → ${to}，提交状态已置为「待升版」`
@@ -2567,7 +2590,7 @@ function sendVdrRevNotify(){
   r.fst = ['gold','待升版'];
   r.stLog = r.stLog || [];
   /* 与「VDR文件清单」通知记录同构，便于两处共用同一抽屉渲染 */
-  r.stLog.push({t:RV_TODAY, act:'通知更新', from, to, ups:ups.length, reason, mailTo, cc, ccCnt});
+  r.stLog.push({t:RV_TODAY, act:'通知更新', from, to, ups:ups.length, upsList:ups.slice(), reason, mailTo, cc, ccCnt});
   renderVdrReviews();
   if(document.getElementById('vdrDrawerWrap') && document.getElementById('vdrDrawerWrap').classList.contains('open')
      && window.__vdMode === 'review' && window.__vdIdx === i) vdTab(window.__vdTab || 'ver');
