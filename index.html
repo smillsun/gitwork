@@ -1896,10 +1896,10 @@ function renderVdrmFiles(){
   const tbody = document.getElementById('vdrmBody2');
   if(!tbody) return;
   const L = vdrmFileList();
-  /* 文件名：PID 图纸名称（纯文本），前面带状态标签——逾期信息并入同一标签（未提交/待升版且已过计划到版日） */
+  /* 文件名：PID 图纸名称（纯文本），前面带状态标签——逾期信息并入同一标签，逾期整标签用红色告警 */
   const nameCell = r=>{
     const od = vdrOverdue(r) ? Math.abs(ddlDays(r.plan)) : 0;
-    const tag = od ? vdrmTag([r.st[0], `${r.st[1]} · 逾期${od}天`]) : vdrmTag(r.st);
+    const tag = od ? vdrmTag(['red', `${r.st[1]} · 逾期${od}天`]) : vdrmTag(r.st);
     return `<div class="fname-cell">${tag}<span class="fname" title="${r.planFile}">${r.planFile}</span></div>`;
   };
   /* 提交文件：供应商实际提交的文件（悬浮出预览/下载，多文件堆叠） */
@@ -2445,10 +2445,10 @@ function renderVdrReviews(){
   tbody.innerHTML = vdrReviews.map((r,i)=>{
     const st = vdrReviewState(r);
     const revNames = (r.rev||[]).map(([n])=>n).join('、');
-    /* 评审截止逾期并入状态标签（与文件清单页口径一致） */
+    /* 评审截止逾期并入状态标签（逾期整标签红色告警） */
     const fst = vdrRevFileSt(r);
     const n = ddlDays(r.ddl);
-    const tag = n < 0 ? vdrmTag([fst[0], `${fst[1]} · 逾期${-n}天`]) : vdrmTag(fst);
+    const tag = n < 0 ? vdrmTag(['red', `${fst[1]} · 逾期${-n}天`]) : vdrmTag(fst);
     return `<tr data-i="${i}" style="cursor:pointer" onclick="openVdrRevDrawer(${i},event)">
       <td class="sticky-l" style="color:var(--on-quaternary)">${i+1}</td>
       <td class="sticky-l2" style="left:44px"><span class="ell" title="${r.proj}">${r.proj}</span></td>
