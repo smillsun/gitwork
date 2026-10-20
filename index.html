@@ -433,12 +433,18 @@ textarea.mail-prev{width:100%;min-height:180px;max-height:280px;resize:vertical;
 .mail-up-i .s{color:var(--on-quaternary);flex:none;font-family:var(--mono);font-size:11px}
 .mail-up-i .x{color:var(--on-quaternary);cursor:pointer;flex:none;padding:0 2px}
 .mail-up-i .x:hover{color:var(--error)}
-/* 通知记录：催交 / 升版留痕列表 */
-.nlog{display:flex;flex-direction:column;gap:8px;max-height:360px;overflow:auto}
-.nlog-i{border:1px solid var(--outline-variant);border-radius:var(--r-md);padding:8px 10px;background:var(--surface-container)}
-.nlog-h{display:flex;align-items:center;gap:8px;font-size:12px}
-.nlog-h .t{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--on-quaternary)}
-.nlog-b{font-size:12px;line-height:18px;color:var(--on-variant);margin-top:4px;white-space:normal;word-break:break-all}
+/* 通知记录：时间轴（时间 | 圆点竖线 | 字段明细） */
+.tl{display:flex;flex-direction:column;max-height:400px;overflow:auto;padding:4px 6px 2px 2px}
+.tl-i{display:grid;grid-template-columns:76px 22px 1fr;gap:0 8px}
+.tl-t{font-family:var(--mono);font-size:11px;color:var(--on-quaternary);padding-top:3px;white-space:nowrap}
+.tl-dotcol{position:relative;display:flex;justify-content:center}
+.tl-dot{width:8px;height:8px;border-radius:50%;background:var(--primary);margin-top:4px;z-index:1;flex:none}
+.tl-dotcol::before{content:"";position:absolute;top:14px;bottom:-8px;left:50%;width:1px;background:var(--outline-variant)}
+.tl-i:last-child .tl-dotcol::before{display:none}
+.tl-c{padding-bottom:16px;min-width:0}
+.tl-h{margin-bottom:2px}
+.tl-f{font-size:12px;line-height:18px;color:var(--on-variant);margin-top:2px;white-space:normal;word-break:break-all}
+.tl-f .k{color:var(--on-quaternary)}
 
 /* ============ 文件详情右侧抽屉 ============ */
 .drawer-wrap{position:fixed;inset:0;z-index:160;display:none}
@@ -2032,19 +2038,10 @@ function openVdrUrgeModal(uid){
       <div class="m-fi wide"><label>邮件主题</label>
         <input class="input" readonly value="【VDR文件催交通知】${r.doc} ${r.equip} 请尽快提交"></div>
       <div class="m-fi wide"><label>催交内容</label>
-        <textarea class="mail-prev" id="vdrUrgeBodyTa">尊敬的 ${r.sup}：
+        <textarea class="mail-prev" id="vdrUrgeBodyTa">${r.sup}，您好！
 
-贵司承担的 ${r.equip}（位号 ${r.tag}）VDR 文件《${r.planFile}》尚未提交，
-计划提交日期为 ${r.plan}${od ? `，目前已逾期 ${od} 天` : ''}。
-
-请于收到本通知后 3 个工作日内，通过供应商门户提交文件并回填实际提交日期。
-如已提交请忽略本邮件。
-
-· 关联单据：${r.doc}
-· 项目名称：${r.proj}
-· 系统名称：${r.sys}
-
-（本邮件由采购执行平台自动发送，请勿直接回复）</textarea></div>
+贵司承担的 ${r.doc} 合同，${r.planFile} 文件计划提交日期：${r.plan}${od ? `（已逾期 ${od} 天）` : ''}，请尽快完成提交！
+如已提交请忽略本邮件</textarea></div>
     </div>
     <div class="m-foot">
       <button class="btn btn-default" onclick="closeVdrUrge()">取消</button>
@@ -2078,21 +2075,27 @@ function openVdrNoticeLog(uid){
       <span class="hint" style="margin-left:10px">${r.doc} · ${r.equip} · ${r.planFile}</span>
       <span class="m-close" onclick="closeVdrNoticeLog()" title="关闭（Esc）">✕</span></div>
     <div class="m-body" style="display:block">
-      ${items.length ? `<div class="nlog">${items.map(x=>{
+      ${items.length ? `<div class="tl">${items.map(x=>{
         const isUrge = x.act === '催交';
-        const head = isUrge ? '催交' : '通知升版';
         const cls  = isUrge ? 'tag-gold' : 'tag-blue';
-        const lines = [];
-        if(x.mailTo) lines.push(`收件人：${x.mailTo}`);
-        if(!isUrge && x.from) lines.push(`版本：${x.from} → ${x.to}`);
-        if(!isUrge && x.cc) lines.push(`抄送：${x.cc}`);
-        if(!isUrge && x.ups) lines.push(`附件：${x.ups} 个`);
-        if(!isUrge && x.reason) lines.push(`更新原因：${x.reason}`);
-        if(isUrge && x.body) lines.push(x.body.replace(/\n+/g,'　').slice(0,120) + (x.body.length>120?'…':''));
-        return `<div class="nlog-i">
-          <div class="nlog-h"><span class="tag ${cls}"><span class="tag-dot" style="background:${isUrge?'#faad14':'#1677ff'}"></span>${head}</span>
-            <span class="t">${x.t}</span></div>
-          <div class="nlog-b">${lines.length ? lines.join('<br>') : '—'}</div>
+        const dot  = isUrge ? '#faad14' : '#1677ff';
+        const head = isUrge ? '催交通知' : '升版通知';
+        const subj = isUrge ? `【VDR文件催交通知】${r.doc} ${r.equip} 请尽快提交`
+                            : `【VDR文件升版通知】${r.doc} ${r.equip} 需更新至 ${x.to} 版`;
+        const f = (k,v)=> v ? `<div class="tl-f"><span class="k">${k}</span>${v}</div>` : '';
+        return `<div class="tl-i">
+          <div class="tl-t">${x.t}</div>
+          <div class="tl-dotcol"><span class="tl-dot" style="background:${dot}"></span></div>
+          <div class="tl-c">
+            <div class="tl-h"><span class="tag ${cls}"><span class="tag-dot" style="background:${dot}"></span>${head}</span></div>
+            ${f('标题：', subj)}
+            ${f('收件人：', x.mailTo)}
+            ${!isUrge ? f('版本：', x.from ? `${x.from} → ${x.to}` : '') : ''}
+            ${!isUrge ? f('抄送：', x.cc) : ''}
+            ${!isUrge ? f('附件：', x.ups ? x.ups + ' 个' : '') : ''}
+            ${!isUrge ? f('更新原因：', x.reason) : ''}
+            ${isUrge && x.body ? `<div class="tl-f"><span class="k">内容：</span><span style="white-space:pre-wrap">${x.body}</span></div>` : ''}
+          </div>
         </div>`;
       }).join('')}</div>`
       : `<div class="empty-mini"><div class="ico">🗂</div>暂无通知记录<div style="font-size:11px;margin-top:4px">催交、通知更新发送后会在此留痕</div></div>`}
