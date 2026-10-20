@@ -2008,6 +2008,36 @@ function vdrMailMeta(){
   const ups = [...document.querySelectorAll('#vdrMailUpList .mail-up-i .n')].map(x=>x.title);
   return { cc, ccCnt: cc ? cc.split(/[,，;；]/).filter(x=>x.trim()).length : 0, ups };
 }
+/* ---------- 通知更新邮件模板（清单 / 评审共用，保证两处文案一致） ----------
+   vdrMailDocNo(c)        合同编号：清单页取单据号 doc；评审页取文件编号中的合同段
+   vdrMailFname(c)        需更新的文件名
+   vdrUpdateMailBody(c)   正文：供应商名称，您好！…请在 5 个工作日内完成新版本文件提交
+   vdrMailSubmitHtml()    正文末「提交地址：立即提交文件」入口 */
+function vdrMailDocNo(c){
+  if(c.doc) return c.doc;
+  const s = String(c.fno||'');
+  const m = s.match(/^([A-Za-z0-9]+-[A-Za-z0-9-]*?)-[A-Z]{1,3}\d[\w./-]*$/);
+  return m ? m[1] : s;
+}
+function vdrMailFname(c){
+  if(c.planFile) return c.planFile;                 /* 清单页：计划提交文件名 */
+  return `${c.fname || 'VDR'}（${c.ver || 'A'} 版）`;  /* 评审页：文件名 + 当前版本 */
+}
+function vdrUpdateMailBody(c){
+  const sup = c.supName || '供应商';
+  return `${sup}，您好！
+
+贵司承担的 ${vdrMailDocNo(c)} 合同，${vdrMailFname(c)} 文件需要更新，请在5个工作日内完成新版本文件提交，谢谢！`;
+}
+function vdrMailSubmitHtml(){
+  return `
+    <div class="mail-submit"><span class="k">提交地址：</span>
+      <a class="mail-submit-a" onclick="vdrMailSubmitLink(event)" title="演示环境：模拟跳转供应商文件提交通道">立即提交文件 →</a></div>`;
+}
+function vdrMailSubmitLink(e){
+  if(e) e.preventDefault();
+  toast('已打开文件提交通道', '演示环境：正式环境中此处跳转供应商门户的文件上传页（VDR 提交入口）');
+}
 /* 催交：真实发送动作（写入通知记录 + 提示）
    kind='review' 时作用于评审行（vdrReviews），默认作用于清单行（vdrFiles） */
 function urgeSupplier(uid, meta, kind){
@@ -2015,11 +2045,17 @@ function urgeSupplier(uid, meta, kind){
   const r = (isRev ? vdrReviews : vdrFiles).find(x=> (isRev ? String(x.__idx) : x.uid) === String(uid));
   if(!r) return;
   const rec = {t:RV_TODAY, act:'催交'};
-  if(meta){ rec.mailTo = meta.to || ''; rec.body = meta.body || ''; }
+  if(meta){
+    rec.mailTo = meta.to || '';
+    rec.cc = meta.cc || '';
+    rec.ccCnt = meta.cc ? meta.cc.split(/[,，;；]/).filter(x=>x.trim()).length : 0;
+    rec.body = meta.body || '';
+  }
   r.stLog = r.stLog || [];
   r.stLog.push(rec);
   const who = isRev ? r.fno + ' · ' + r.fname : `${r.sup} · ${r.equip} · 文件名 ${r.planFile}`;
-  toast('催交通知已发送', `${who}（邮件 + 站内信）`);
+  toast('催交通知已发送', `${who}（邮件 + 站内信）`
+    + (rec.ccCnt ? `，抄送 ${rec.ccCnt} 人` : ''));
 }
 /* 催交弹层：显示催交内容，确认后发送；收件人默认带出、可修改 */
 window.__vdrUrgeUid = null;
@@ -2046,6 +2082,9 @@ function openVdrUrgeModal(uid, kind){
       <div class="m-fi wide"><label>收件人</label>
         <input class="input" id="vdrUrgeToInput" value="${mailTo}">
         <span class="hint">${sup || docNo} · 默认带出供应商邮箱，可编辑 · 演示环境不实际外发</span></div>
+      <div class="m-fi wide"><label>抄送人</label>
+        <input class="input" id="vdrUrgeCcInput" value="purchase.cc@supplier-demo.com" placeholder="多个邮箱用英文逗号分隔">
+        <span class="hint">默认带出采购负责人邮箱，可修改，多个邮箱用英文逗号分隔</span></div>
       <div class="m-fi wide"><label>邮件主题</label>
         <input class="input" readonly value="【VDR文件催交通知】${docNo} ${r.equip || ''} 请尽快提交"></div>
       <div class="m-fi wide"><label>催交内容</label>
@@ -2070,9 +2109,10 @@ function sendVdrUrge(){
   const uid = window.__vdrUrgeUid;
   const kind = window.__vdrUrgeKind;
   const to = ((document.getElementById('vdrUrgeToInput')||{}).value||'').trim();
+  const cc = ((document.getElementById('vdrUrgeCcInput')||{}).value||'').trim();
   const body = ((document.getElementById('vdrUrgeBodyTa')||{}).value||'').trim();
   closeVdrUrge();
-  if(uid) urgeSupplier(uid, { to, body }, kind);
+  if(uid) urgeSupplier(uid, { to, cc, body }, kind);
 }
 /* 通知记录：抽屉（清单页 / 评审页共用；ctx 用于区分数据源与标题副文案）
    ctx = {kind:'file'|'review', row} */
@@ -2117,8 +2157,8 @@ function openVdrNoticeLog(uid, kind){
             <div class="tl-h"><span class="tag ${cls}"><span class="tag-dot" style="background:${dot}"></span>${head}</span></div>
             ${f('标题：', subj)}
             ${f('收件人：', x.mailTo)}
+            ${f('抄送：', x.cc)}
             ${!isUrge ? f('版本：', x.from ? `${x.from} → ${x.to}` : '') : ''}
-            ${!isUrge ? f('抄送：', x.cc) : ''}
             ${!isUrge ? f('附件：', x.ups ? x.ups + ' 个' : '') : ''}
             ${!isUrge ? f('更新原因：', x.reason) : ''}
             ${isUrge && x.body ? `<div class="tl-f"><span class="k">内容：</span><span style="white-space:pre-wrap">${x.body}</span></div>` : ''}
