@@ -1929,7 +1929,7 @@ function renderVdrmFiles(){
       <td class="sticky-r" style="white-space:nowrap">${
         r.st[1]==='已提交'
           ? `<button class="btn-link" style="font-size:12px;color:var(--on-quaternary);cursor:not-allowed" disabled title="供应商已提交，无需催交">催交</button>`
-          : `<button class="btn-link" style="font-size:12px" onclick="urgeSupplier('${r.uid}')">催交</button>`
+          : `<button class="btn-link" style="font-size:12px" onclick="openVdrUrgeModal('${r.uid}')">催交</button>`
       }<button class="btn-link" style="font-size:12px;margin-left:10px" onclick="openVdrNotifyModal('${r.uid}')" title="发送邮件通知供应商更新文件">通知更新</button></td>
     </tr>`).join('') || '<tr class="empty-tr"><td colspan="14" style="text-align:center;color:var(--on-quaternary);padding:48px 0">暂无满足条件的数据</td></tr>';
   const tot = document.getElementById('vdrmTotal2');
@@ -1996,11 +1996,63 @@ function vdrMailMeta(){
   const ups = [...document.querySelectorAll('#vdrMailUpList .mail-up-i .n')].map(x=>x.title);
   return { cc, ccCnt: cc ? cc.split(/[,，;；]/).filter(x=>x.trim()).length : 0, ups };
 }
+/* 催交：真实发送动作（写入审查记录 + 提示） */
 function urgeSupplier(uid){
   const r = vdrFiles.find(x=>x.uid === uid);
   if(!r) return;
   r.stLog.push({t:RV_TODAY, act:'催交'});
   toast('催交通知已发送', `${r.sup} · ${r.equip} · 文件名 ${r.planFile}（邮件 + 站内信）`);
+}
+/* 催交弹层：显示催交内容，确认后发送；收件人默认带出、可修改 */
+window.__vdrUrgeUid = null;
+function openVdrUrgeModal(uid){
+  const r = vdrFiles.find(x=>x.uid === uid);
+  if(!r) return;
+  const old = document.getElementById('vdrUrgeMask'); if(old) old.remove();
+  window.__vdrUrgeUid = uid;
+  const mailTo = vdrSupplierMail(r.sup);
+  const od = vdrOverdue(r) ? Math.abs(ddlDays(r.plan)) : 0;
+  const box = document.createElement('div');
+  box.className = 'mask open'; box.id = 'vdrUrgeMask';
+  box.innerHTML = `
+  <div class="modal" role="dialog" aria-modal="true" style="width:600px">
+    <div class="m-head"><b>催交提醒 · 邮件通知</b><span class="m-close" onclick="closeVdrUrge()" title="关闭（Esc）">✕</span></div>
+    <div class="m-body">
+      <div class="m-fi wide"><label>收件人</label>
+        <input class="input" id="vdrUrgeToInput" value="${mailTo}">
+        <span class="hint">${r.sup} · 默认带出供应商邮箱，可编辑 · 演示环境不实际外发</span></div>
+      <div class="m-fi wide"><label>邮件主题</label>
+        <input class="input" readonly value="【VDR文件催交通知】${r.doc} ${r.equip} 请尽快提交"></div>
+      <div class="m-fi wide"><label>催交内容</label>
+        <textarea class="mail-prev" id="vdrUrgeBodyTa">尊敬的 ${r.sup}：
+
+贵司承担的 ${r.equip}（位号 ${r.tag}）VDR 文件《${r.planFile}》尚未提交，
+计划提交日期为 ${r.plan}${od ? `，目前已逾期 ${od} 天` : ''}。
+
+请于收到本通知后 3 个工作日内，通过供应商门户提交文件并回填实际提交日期。
+如已提交请忽略本邮件。
+
+· 关联单据：${r.doc}
+· 项目名称：${r.proj}
+· 系统名称：${r.sys}
+
+（本邮件由采购执行平台自动发送，请勿直接回复）</textarea></div>
+    </div>
+    <div class="m-foot">
+      <button class="btn btn-default" onclick="closeVdrUrge()">取消</button>
+      <button class="btn btn-primary" onclick="sendVdrUrge()">发送催交邮件</button>
+    </div>
+  </div>`;
+  document.body.appendChild(box);
+}
+function closeVdrUrge(){
+  const m = document.getElementById('vdrUrgeMask'); if(m) m.remove();
+  window.__vdrUrgeUid = null;
+}
+function sendVdrUrge(){
+  const uid = window.__vdrUrgeUid;
+  closeVdrUrge();
+  if(uid) urgeSupplier(uid);
 }
 /* 邮件通知弹层：确认后版本推进 +1，状态置为「待升版」 */
 window.__vdrNotifyUid = null;
