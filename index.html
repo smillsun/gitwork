@@ -2065,16 +2065,19 @@ function sendVdrUrge(){
 function openVdrNoticeLog(uid){
   const r = vdrFiles.find(x=>x.uid === uid);
   if(!r) return;
-  const old = document.getElementById('vdrLogMask'); if(old) old.remove();
+  const old = document.getElementById('vdrLogDrawer'); if(old) old.remove();
   const items = (r.stLog||[]).filter(x=>x.act==='催交' || x.act==='通知更新').slice().reverse();
   const box = document.createElement('div');
-  box.className = 'mask open'; box.id = 'vdrLogMask';
+  box.className = 'drawer-wrap open'; box.id = 'vdrLogDrawer';
   box.innerHTML = `
-  <div class="modal" role="dialog" aria-modal="true" style="width:620px">
-    <div class="m-head"><b>通知记录</b>
-      <span class="hint" style="margin-left:10px">${r.doc} · ${r.equip} · ${r.planFile}</span>
-      <span class="m-close" onclick="closeVdrNoticeLog()" title="关闭（Esc）">✕</span></div>
-    <div class="m-body" style="display:block">
+  <div class="dmask" onclick="closeVdrNoticeLog()"></div>
+  <div class="drawer" role="dialog" aria-modal="true" aria-label="通知记录">
+    <div class="d-head">
+      <span class="d-title">通知记录</span>
+      <span class="hint" style="margin-left:6px">${r.doc} · ${r.equip} · ${r.planFile}</span>
+      <span class="d-acts"><span class="d-x" onclick="closeVdrNoticeLog()" title="关闭（Esc）">✕</span></span>
+    </div>
+    <div class="d-body" style="padding:14px 16px">
       ${items.length ? `<div class="tl">${items.map(x=>{
         const isUrge = x.act === '催交';
         const cls  = isUrge ? 'tag-gold' : 'tag-blue';
@@ -2100,12 +2103,11 @@ function openVdrNoticeLog(uid){
       }).join('')}</div>`
       : `<div class="empty-mini"><div class="ico">🗂</div>暂无通知记录<div style="font-size:11px;margin-top:4px">催交、通知更新发送后会在此留痕</div></div>`}
     </div>
-    <div class="m-foot"><button class="btn btn-primary" onclick="closeVdrNoticeLog()">关 闭</button></div>
   </div>`;
   document.body.appendChild(box);
-  box.addEventListener('click', e=>{ if(e.target === box) closeVdrNoticeLog(); });
+  /* 抽屉本身不吞点击，遮罩点击已在 .dmask 上处理 */
 }
-function closeVdrNoticeLog(){ const m = document.getElementById('vdrLogMask'); if(m) m.remove(); }
+function closeVdrNoticeLog(){ const m = document.getElementById('vdrLogDrawer'); if(m) m.remove(); }
 /* 邮件通知弹层：确认后版本推进 +1，状态置为「待升版」 */
 window.__vdrNotifyUid = null;
 function openVdrNotifyModal(uid){
