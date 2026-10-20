@@ -422,6 +422,7 @@ sup.req-star{color:var(--error)}
 .m-fi label i.req{color:var(--error);font-style:normal;margin-right:2px}
 /* 升版通知：邮件正文预览 */
 .mail-prev{background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:var(--r-md);padding:10px 12px;font-size:12px;line-height:20px;color:var(--on-variant);white-space:pre-wrap;max-height:220px;overflow:auto}
+textarea.mail-prev{width:100%;min-height:180px;max-height:280px;resize:vertical;font-family:inherit;background:var(--surface)}
 /* 邮件弹层：抄送人 / 附件上传（≤50M） */
 .mail-up-btn{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 10px;border:1px dashed var(--outline);border-radius:var(--r-md);color:var(--primary);font-size:12px;cursor:pointer;background:var(--primary-bg);user-select:none}
 .mail-up-btn:hover{border-color:var(--primary)}
@@ -2013,13 +2014,15 @@ function openVdrNotifyModal(uid){
     <div class="m-head"><b>邮件通知供应商更新</b><span class="m-close" onclick="closeVdrNotify()" title="关闭（Esc）">✕</span></div>
     <div class="m-body">
       <div class="m-fi wide"><label>收件人</label>
-        <input class="input" readonly value="${mailTo}">
-        <span class="hint">${r.sup} · 演示环境不实际外发</span></div>
+        <input class="input" id="vdrToInput" value="${mailTo}">
+        <span class="hint">${r.sup} · 默认带出供应商邮箱，可编辑 · 演示环境不实际外发</span></div>
       ${vdrMailCcHtml()}
       <div class="m-fi wide"><label>邮件主题</label>
         <input class="input" readonly value="【VDR文件升版通知】${r.doc} ${r.equip} 需更新至 ${to} 版"></div>
+      <div class="m-fi wide"><label>更新原因<i class="req">*</i></label>
+        <input class="input" id="vdrReasonInput" value="内审完成，按内审意见修改后升版" placeholder="请输入更新原因，如：内审完成，按意见修改后升版"></div>
       <div class="m-fi wide"><label>邮件正文</label>
-        <div class="mail-prev" id="vdrMailBody">尊敬的 ${r.sup}：
+        <textarea class="mail-prev" id="vdrMailBodyTa">尊敬的 ${r.sup}：
 
 贵司提供的 ${r.equip}（位号 ${r.tag}）VDR 文件《${r.planFile}》当前版本 ${r.ver} 已完成内审，
 请按内审意见修改后提交升版文件，新版本号为 ${to}。
@@ -2032,7 +2035,7 @@ function openVdrNotifyModal(uid){
 请在收到本通知后 5 个工作日内，通过供应商门户上传 ${to} 版文件并回填提交时间。
 逾期未提交将计入供应商履约考核。
 
-（本邮件由采购执行平台自动发送，请勿直接回复）</div></div>
+（本邮件由采购执行平台自动发送，请勿直接回复）</textarea></div>
       ${vdrMailUpHtml()}
       <div class="m-fi wide"><label>发送后动作</label>
         <span class="hint">版本 ${r.ver} → <b style="color:var(--primary)">${to}</b>；提交状态 已提交 → 待升版</span></div>
@@ -2053,15 +2056,18 @@ function sendVdrNotify(){
   const uid = window.__vdrNotifyUid;
   const r = vdrFiles.find(x=>x.uid === uid);
   const { ccCnt, ups } = vdrMailMeta();
+  const reason = ((document.getElementById('vdrReasonInput')||{}).value||'').trim() || '内审完成，按内审意见修改后升版';
   if(!r){ closeVdrNotify(); return; }
   const from = r.ver, to = nextVer(from);
   r.ver = to;
   r.st  = ['gold','待升版'];
   r.notifyAt = RV_TODAY;
-  r.stLog.push({t:RV_TODAY, act:'通知更新', from, to, ups:ups.length});
+  r.stLog.push({t:RV_TODAY, act:'通知更新', from, to, ups:ups.length, reason});
   closeVdrNotify();
   refreshVdrmFiles();          /* 表格 + 指标 + 筛选条三层同步 */
-  toast('升版通知已发送', `${r.sup} · ${r.equip} · 版本 ${from} → ${to}，提交状态已置为「待升版」` + (ccCnt ? `，抄送 ${ccCnt} 人` : '') + (ups.length ? `，附件 ${ups.length} 个` : ''));
+  toast('升版通知已发送', `${r.sup} · ${r.equip} · 版本 ${from} → ${to}，提交状态已置为「待升版」`
+    + `，更新原因：${reason}`
+    + (ccCnt ? `，抄送 ${ccCnt} 人` : '') + (ups.length ? `，附件 ${ups.length} 个` : ''));
 }
 /* 从文件清单跳进评审页（按文件编号定位） */
 function openVdrReviewByFno(fno){
@@ -2224,7 +2230,7 @@ function vdLogBody(r){
   if(!items.length) return '<div class="empty-mini"><div class="ico">🗂</div>暂无审查记录<div style="font-size:11px;margin-top:4px">催交、通知更新、驳回等操作记录将展示在此</div></div>';
   const actTxt = {
     '催交':     '已向供应商发送催交通知（邮件 + 站内信）',
-    '通知更新': x=>`通知供应商升版：版本 ${x.from} → ${x.to}，状态置为「待升版」`,
+    '通知更新': x=>`通知供应商升版：版本 ${x.from} → ${x.to}，状态置为「待升版」` + (x.reason ? `；更新原因：${x.reason}` : ''),
     '驳回文件': '文件已驳回，供应商需重新提交'
   };
   return `<div class="d-log">${items.map(x=>`
@@ -2331,12 +2337,14 @@ function openVdrRevNotify(idx){
   <div class="modal" style="width:620px">
     <div class="m-head"><b>邮件通知供应商更新</b><span class="m-close" onclick="closeVdrRevNotify()">✕</span></div>
     <div class="m-body">
-      <div class="m-fi"><label>收件人</label><input class="input" value="vdr.${String(idx+1).padStart(3,'0')}@supplier-demo.com" readonly></div>
+      <div class="m-fi"><label>收件人</label><input class="input" id="vdrRevToInput" value="vdr.${String(idx+1).padStart(3,'0')}@supplier-demo.com"></div>
       ${vdrMailCcHtml()}
       <div class="m-fi"><label>版本</label><input class="input" value="${r.ver} → ${to}" readonly></div>
       <div class="m-fi wide"><label>主题</label><input class="input" value="【升版通知】${r.fno} ${r.fname}（${r.ver} → ${to}）" readonly></div>
+      <div class="m-fi wide"><label>更新原因<i class="req">*</i></label>
+        <input class="input" id="vdrRevReasonInput" value="内审完成，按内审意见修改后升版" placeholder="请输入更新原因，如：内审完成，按意见修改后升版"></div>
       <div class="m-fi wide"><label>正文</label>
-        <div class="mail-prev">尊敬的供应商：
+        <textarea class="mail-prev" id="vdrRevMailBodyTa">尊敬的供应商：
 
 贵司提交的 VDR 文件《${r.fname}》（文件编号 ${r.fno}）当前版本 ${r.ver} 已完成内审，
 请按内审意见修改后提交升版文件，新版本号为 ${to}。
@@ -2348,7 +2356,7 @@ function openVdrRevNotify(idx){
 请在收到本通知后 5 个工作日内，通过供应商门户上传 ${to} 版文件。
 逾期未提交将计入供应商履约考核。
 
-（本邮件由采购执行平台自动发送，请勿直接回复）</div></div>
+（本邮件由采购执行平台自动发送，请勿直接回复）</textarea></div>
       ${vdrMailUpHtml()}
       <div class="m-fi wide"><label>发送后动作</label>
         <span class="hint">版本 ${r.ver} → <b style="color:var(--primary)">${to}</b>；并写入审查记录</span></div>
@@ -2363,17 +2371,19 @@ function sendVdrRevNotify(){
   const i = window.__revNotifyIdx;
   const r = vdrReviews[i];
   const { ccCnt, ups } = vdrMailMeta();
+  const reason = ((document.getElementById('vdrRevReasonInput')||{}).value||'').trim() || '内审完成，按内审意见修改后升版';
   closeVdrRevNotify();
   if(!r) return;
   const from = r.ver, to = nextVer(from);
   r.ver = to; r.notifyAt = RV_TODAY;
   r.fst = ['gold','待升版'];
   r.stLog = r.stLog || [];
-  r.stLog.push({t:RV_TODAY, act:'通知更新', txt:`版本 ${from} → ${to}，等待供应商提交新版` + (ups.length ? `（附件 ${ups.length} 个）` : '')});
+  r.stLog.push({t:RV_TODAY, act:'通知更新', txt:`版本 ${from} → ${to}，等待供应商提交新版，更新原因：${reason}` + (ups.length ? `（附件 ${ups.length} 个）` : '')});
   renderVdrReviews();
   if(document.getElementById('vdrDrawerWrap') && document.getElementById('vdrDrawerWrap').classList.contains('open')
      && window.__vdMode === 'review' && window.__vdIdx === i) vdTab(window.__vdTab || 'ver');
-  toast('升版通知已发送', `${r.fno} · ${r.fname}，版本 ${from} → ${to}` + (ccCnt ? `，抄送 ${ccCnt} 人` : '') + (ups.length ? `，附件 ${ups.length} 个` : ''));
+  toast('升版通知已发送', `${r.fno} · ${r.fname}，版本 ${from} → ${to}，更新原因：${reason}`
+    + (ccCnt ? `，抄送 ${ccCnt} 人` : '') + (ups.length ? `，附件 ${ups.length} 个` : ''));
 }
 /* 评审行：设置评审人 */
 function openVdrRevPick(idx){
