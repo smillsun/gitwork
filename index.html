@@ -1896,8 +1896,12 @@ function renderVdrmFiles(){
   const tbody = document.getElementById('vdrmBody2');
   if(!tbody) return;
   const L = vdrmFileList();
-  /* 文件名：PID 图纸名称（纯文本，不挂预览），前面带提交状态标签 */
-  const nameCell = r=>`<div class="fname-cell">${vdrmTag(r.st)}<span class="fname" title="${r.planFile}">${r.planFile}</span></div>`;
+  /* 文件名：PID 图纸名称（纯文本），前面带状态标签——逾期信息并入同一标签（未提交/待升版且已过计划到版日） */
+  const nameCell = r=>{
+    const od = vdrOverdue(r) ? Math.abs(ddlDays(r.plan)) : 0;
+    const tag = od ? vdrmTag([r.st[0], `${r.st[1]} · 逾期${od}天`]) : vdrmTag(r.st);
+    return `<div class="fname-cell">${tag}<span class="fname" title="${r.planFile}">${r.planFile}</span></div>`;
+  };
   /* 提交文件：供应商实际提交的文件（悬浮出预览/下载，多文件堆叠） */
   const fileCell = r=>{
     const one = f=>`<span class="file-link" data-fname="${f}" data-fno="${r.fno}"
@@ -1920,7 +1924,7 @@ function renderVdrmFiles(){
       <td>${fileCell(r)}</td>
       <td style="font-family:var(--mono);font-size:11px"><span class="ell" title="${r.fno}">${r.fno}</span></td>
       <td style="font-family:var(--mono);font-size:11px;color:var(--on-variant)">${r.sub}</td>
-      <td style="font-family:var(--mono);font-size:11px;color:var(--on-variant)">${r.plan}${vdrOverdue(r)?' '+ddayBadge(r.plan):''}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--on-variant)">${r.plan}</td>
       <td><span class="ell" title="${(r.rev||[]).join('、')||'未指派'}">${r.rev && r.rev.length ? r.rev.join('、') : '<span style="color:var(--error)">未指派</span>'}</span></td>
       <td class="sticky-r" style="white-space:nowrap">${
         r.st[1]==='已提交'
@@ -2441,11 +2445,15 @@ function renderVdrReviews(){
   tbody.innerHTML = vdrReviews.map((r,i)=>{
     const st = vdrReviewState(r);
     const revNames = (r.rev||[]).map(([n])=>n).join('、');
+    /* 评审截止逾期并入状态标签（与文件清单页口径一致） */
+    const fst = vdrRevFileSt(r);
+    const n = ddlDays(r.ddl);
+    const tag = n < 0 ? vdrmTag([fst[0], `${fst[1]} · 逾期${-n}天`]) : vdrmTag(fst);
     return `<tr data-i="${i}" style="cursor:pointer" onclick="openVdrRevDrawer(${i},event)">
       <td class="sticky-l" style="color:var(--on-quaternary)">${i+1}</td>
       <td class="sticky-l2" style="left:44px"><span class="ell" title="${r.proj}">${r.proj}</span></td>
       <td style="font-family:var(--mono);font-size:11px"><span class="ell" title="${r.fno}">${r.fno}</span></td>
-      <td><div class="fname-cell">${vdrmTag(vdrRevFileSt(r))}<span class="fname" title="${r.fname}">${r.fname}</span></div></td>
+      <td><div class="fname-cell">${tag}<span class="fname" title="${r.fname}">${r.fname}</span></div></td>
       <td style="text-align:center;font-family:var(--mono);font-size:11px">${r.ver}</td>
       <td><span class="file-link ell" title="${r.file||''}" data-fname="${r.file||''}" data-fno="${r.fno}"
             onmouseenter="fvShow(this)" onmouseleave="fvHide()"
@@ -2454,7 +2462,7 @@ function renderVdrReviews(){
       <td style="font-family:var(--mono);font-size:11px"><span class="ell" title="${r.tag}">${r.tag}</span></td>
       <td><span class="ell" title="${revNames||'未指派'}">${revNames || '<span style="color:var(--error)">未指派</span>'}</span></td>
       <td style="font-family:var(--mono);font-size:11px;color:var(--on-variant)">${r.sub}</td>
-      <td style="white-space:nowrap"><span style="font-family:var(--mono);font-size:11px;color:var(--on-variant)">${r.ddl}</span> ${ddayBadge(r.ddl)}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--on-variant)">${r.ddl}</td>
       <td class="sticky-r" style="white-space:nowrap">
         <button class="btn-link" style="font-size:12px" onclick="openVdrRevNotify(${i})">通知更新</button>
         <button class="btn-link" style="font-size:12px;margin-left:10px" onclick="openVdrRevPick(${i})">设置评审人</button>
