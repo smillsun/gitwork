@@ -1477,7 +1477,7 @@ function vdrmPageHtml(){
           <th style="width:104px">设备</th><th style="width:84px">设备位号</th>
           <th style="width:160px">文件名</th><th style="width:56px">最新版本</th><th style="width:152px">提交文件</th>
           <th style="width:170px">VDR文件编号</th>
-          <th style="width:150px">厂商提交时间</th><th style="width:152px">计划到版提交日期</th><th style="width:88px">评审人</th>
+          <th style="width:150px">实际提交日期</th><th style="width:152px">计划提交日期</th><th style="width:88px">评审人</th>
           <th class="sticky-r" style="width:116px">操作</th>
         </tr></thead>
         <tbody id="vdrmBody2"></tbody>
@@ -1595,7 +1595,7 @@ function vdrmFileStats(list){
     {key:'upd',   label:'待升版',      cls:'stat-o', unit:'份', icon:STAT_ICON.flow,
      pick:()=>by(st('待升版')), foot:()=>`占 ${pct(by(st('待升版'))/L.length)}`, tip:'· 已通知更新待交新版', test:st('待升版')},
     {key:'over',  label:'已逾期',      cls:'stat-r', unit:'份', icon:STAT_ICON.warn,
-     pick:()=>by(over), foot:()=>`占 ${pct(by(over)/L.length)}`, tip:'· 超计划到版日期未交', test:over},
+     pick:()=>by(over), foot:()=>`占 ${pct(by(over)/L.length)}`, tip:'· 超计划提交日期未交', test:over},
     {key:'norev', label:'未指派评审人',cls:'stat-p', unit:'份', icon:STAT_ICON.user,
      pick:()=>by(x=>!x.rev || !x.rev.length), foot:()=>`占 ${pct(by(x=>!x.rev || !x.rev.length)/L.length)}`, tip:'· 评审人为空', test:x=>!x.rev || !x.rev.length}
   ];
