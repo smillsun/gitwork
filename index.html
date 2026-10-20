@@ -2021,24 +2021,7 @@ function openVdrNotifyModal(uid){
         <input class="input" readonly value="【VDR文件升版通知】${r.doc} ${r.equip} 需更新至 ${to} 版"></div>
       <div class="m-fi wide"><label>更新原因<i class="req">*</i></label>
         <input class="input" id="vdrReasonInput" value="内审完成，按内审意见修改后升版" placeholder="请输入更新原因，如：内审完成，按意见修改后升版"></div>
-      <div class="m-fi wide"><label>邮件正文</label>
-        <textarea class="mail-prev" id="vdrMailBodyTa">尊敬的 ${r.sup}：
-
-贵司提供的 ${r.equip}（位号 ${r.tag}）VDR 文件《${r.planFile}》当前版本 ${r.ver} 已完成内审，
-请按内审意见修改后提交升版文件，新版本号为 ${to}。
-
-· 关联单据：${r.doc}
-· 项目名称：${r.proj}
-· 系统名称：${r.sys}
-· 计划到版：${r.plan}
-
-请在收到本通知后 5 个工作日内，通过供应商门户上传 ${to} 版文件并回填提交时间。
-逾期未提交将计入供应商履约考核。
-
-（本邮件由采购执行平台自动发送，请勿直接回复）</textarea></div>
       ${vdrMailUpHtml()}
-      <div class="m-fi wide"><label>发送后动作</label>
-        <span class="hint">版本 ${r.ver} → <b style="color:var(--primary)">${to}</b>；提交状态 已提交 → 待升版</span></div>
     </div>
     <div class="m-foot"><button class="btn btn-default" onclick="closeVdrNotify()">取消</button>
       <button class="btn btn-primary" onclick="sendVdrNotify()">发送通知</button></div>
@@ -2343,23 +2326,7 @@ function openVdrRevNotify(idx){
       <div class="m-fi wide"><label>主题</label><input class="input" value="【升版通知】${r.fno} ${r.fname}（${r.ver} → ${to}）" readonly></div>
       <div class="m-fi wide"><label>更新原因<i class="req">*</i></label>
         <input class="input" id="vdrRevReasonInput" value="内审完成，按内审意见修改后升版" placeholder="请输入更新原因，如：内审完成，按意见修改后升版"></div>
-      <div class="m-fi wide"><label>正文</label>
-        <textarea class="mail-prev" id="vdrRevMailBodyTa">尊敬的供应商：
-
-贵司提交的 VDR 文件《${r.fname}》（文件编号 ${r.fno}）当前版本 ${r.ver} 已完成内审，
-请按内审意见修改后提交升版文件，新版本号为 ${to}。
-
-· 项目名称：${r.proj}
-· 设备 / 位号：${r.equip} / ${r.tag}
-· 评审截止：${r.ddl}
-
-请在收到本通知后 5 个工作日内，通过供应商门户上传 ${to} 版文件。
-逾期未提交将计入供应商履约考核。
-
-（本邮件由采购执行平台自动发送，请勿直接回复）</textarea></div>
       ${vdrMailUpHtml()}
-      <div class="m-fi wide"><label>发送后动作</label>
-        <span class="hint">版本 ${r.ver} → <b style="color:var(--primary)">${to}</b>；并写入审查记录</span></div>
     </div>
     <div class="m-foot"><button class="btn btn-default" onclick="closeVdrRevNotify()">取消</button>
       <button class="btn btn-primary" onclick="sendVdrRevNotify()">发送通知</button></div>
